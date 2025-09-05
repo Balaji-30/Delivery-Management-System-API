@@ -1,0 +1,11 @@
+[project]
+name = "fastapi-project"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "fastapi[all]>=0.115.14",
+    "scalar-fastapi>=1.0.3",
+    "sqlmodel>=0.0.24",
+]
