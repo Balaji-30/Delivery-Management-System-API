@@ -1,6 +1,6 @@
 import sqlite3
 
-from app.schema import ShipmentCreate, ShipmentPatch, ShipmentRead
+from app.api.schemas.shipment import ShipmentCreate, ShipmentPatch, ShipmentRead
 
 
 class Database():
