@@ -1,37 +1,40 @@
 
 from datetime import datetime, timedelta
+from uuid import UUID
+
 from sqlalchemy.ext.asyncio import AsyncSession
+
 from app.api.schemas.shipment import ShipmentCreate
-from app.database.models import Shipment, ShipmentStatus
+from app.database.models import Seller, Shipment, ShipmentStatus
+from app.services.base import BaseService
+from app.services.delivery_partner import DeliveryPartnerService
 
-class ShipmentService:
 
-    def __init__(self,session:AsyncSession):
-        self.session=session
-        pass
+class ShipmentService(BaseService):
+
+    def __init__(self,session:AsyncSession,partner_service: DeliveryPartnerService):
+        super().__init__(Shipment, session)
+        self.partner_service = partner_service
     
-    async def get(self,id:int)->Shipment:
-        return await self.session.get(Shipment,id)
+    async def get(self,id:UUID)->Shipment | None:
+        return await self._get(id)
 
-    async def add(self, shipment_create:ShipmentCreate)->Shipment:
-        newShipment = Shipment(
+    async def add(self, shipment_create:ShipmentCreate,seller:Seller)->Shipment:
+        new_shipment = Shipment(
         **shipment_create.model_dump(), 
         status=ShipmentStatus.placed,
         estimated_delivery=datetime.now() + timedelta(days=3),
+        seller_id=seller.id
         )
-        self.session.add(newShipment)
-        await self.session.commit()
-        await self.session.refresh(newShipment)
-        return newShipment
+        partner = await self.partner_service.assign_shipment(new_shipment)
+        new_shipment.delivery_partner_id = partner.id
+        return await self._add(new_shipment)
 
     async def update(self, shipment_update:dict,id:int)->Shipment:
         shipment = await self.get(id)
         shipment.sqlmodel_update(shipment_update)
-        self.session.add(shipment)
-        await self.session.commit()
-        await self.session.refresh(shipment)
-        return shipment
+        
+        return await self._update(shipment)
 
-    async def delete(self,id:int)->None:
-        await self.session.delete(await self.get(id))
-        await self.session.commit()
+    async def delete(self,id:UUID)->None:
+        await self._delete(await self.get(id))

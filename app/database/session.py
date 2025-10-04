@@ -10,7 +10,7 @@ engine=create_async_engine(
 
 async def create_db_tables():
     async with engine.begin() as conn:
-        from app.database.models import Shipment # Import models here to ensure they are registered before creating tables  # noqa: F401
+        from app.database.models import Shipment,Seller # Import models here to ensure they are registered before creating tables  # noqa: F401
         await conn.run_sync(SQLModel.metadata.create_all)
 
 async def create_session():

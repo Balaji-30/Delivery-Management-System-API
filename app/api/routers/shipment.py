@@ -1,5 +1,6 @@
 from http.client import HTTPException
 from typing import Any
+from uuid import UUID
 
 from fastapi import APIRouter, status
 
@@ -12,7 +13,7 @@ router = APIRouter(prefix="/shipment", tags=["Shipment"])
 
 @router.get("/", response_model=ShipmentRead)
 async def get_shipment(
-    id: int,
+    id: UUID,
     service: ServiceDep,
     _: SellerDep,
 ):  # pyright: ignore[reportInvalidTypeForm]
@@ -31,11 +32,15 @@ async def submit_shipment(
     shipment: ShipmentCreate,
     service: ServiceDep,
 ) -> Shipment:  # pyright: ignore[reportInvalidTypeForm]
-    return await service.add(shipment)
+    return await service.add(shipment, seller)
 
 
 @router.patch("/", response_model=ShipmentRead)
-async def shipment_update(id: int, shipmentUpdate: ShipmentPatch, service: ServiceDep):  # pyright: ignore[reportInvalidTypeForm]
+async def shipment_update(
+    id: int,
+    shipmentUpdate: ShipmentPatch,
+    service: ServiceDep,
+):  # pyright: ignore[reportInvalidTypeForm]
     update = shipmentUpdate.model_dump(exclude_none=True)
     if not update:
         raise HTTPException(
@@ -46,6 +51,6 @@ async def shipment_update(id: int, shipmentUpdate: ShipmentPatch, service: Servi
 
 
 @router.delete("/")
-async def delete_shipment(id: int, service: ServiceDep) -> dict[str, Any]:  # pyright: ignore[reportInvalidTypeForm]
+async def delete_shipment(id: UUID, service: ServiceDep) -> dict[str, Any]:  # pyright: ignore[reportInvalidTypeForm]
     await service.delete(id)
     return {"detail": f"Shipment #{id} has been deleted!"}
