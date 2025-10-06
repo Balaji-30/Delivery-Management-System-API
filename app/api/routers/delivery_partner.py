@@ -36,7 +36,7 @@ async def login_delivery_partner(
 
 
 # Update the delivery partner details
-@router.post("/", response_model=DeliveryPartnerRead)
+@router.post("/update", response_model=DeliveryPartnerRead)
 async def update_delivery_partner(
     partner_update: DeliveryPartnerUpdate,
     partner: DeliveryPartnerDep,

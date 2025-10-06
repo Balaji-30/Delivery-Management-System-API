@@ -1,6 +1,6 @@
 import sqlite3
 
-from app.api.schemas.shipment import ShipmentCreate, ShipmentPatch, ShipmentRead
+from app.api.schemas.shipment import ShipmentCreate, ShipmentUpdate, ShipmentRead
 
 
 class Database():
@@ -51,7 +51,7 @@ class Database():
             "status":row[3],
         } if row else None
 
-    def update(self,id:int, shipment:ShipmentPatch)->ShipmentRead:
+    def update(self,id:int, shipment:ShipmentUpdate)->ShipmentRead:
         self.cur.execute("""
             UPDATE shipment SET status= :status 
             WHERE id= :id

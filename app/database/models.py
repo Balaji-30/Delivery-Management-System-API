@@ -13,6 +13,7 @@ class ShipmentStatus(str, Enum):
     in_transit = "in transit"
     out_for_delivery = "out for delivery"
     delivered = "delivered"
+    cancelled = "cancelled"
 
 
 class User(SQLModel):
@@ -31,8 +32,11 @@ class Shipment(SQLModel, table=True):
     content: str
     weight: float = Field(le=25)
     destination: int
-    status: ShipmentStatus
     estimated_delivery: datetime
+
+    timeline: list["ShipmentEvent"] = Relationship(
+        back_populates="shipment", sa_relationship_kwargs={"lazy": "selectin"}
+    )
 
     seller_id: UUID = Field(foreign_key="seller.id")
     seller: "Seller" = Relationship(
@@ -44,6 +48,29 @@ class Shipment(SQLModel, table=True):
         back_populates="shipments", sa_relationship_kwargs={"lazy": "selectin"}
     )
 
+    @property
+    def status(self):
+        self.timeline[-1].status if len(self.timeline) > 0 else None
+
+    
+
+
+class ShipmentEvent(SQLModel, table=True):
+    __tablename__ = "shipment_event"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    created_at: datetime = Field(
+        sa_column=Column(postgresql.TIMESTAMP, default=datetime.now)
+    )
+    location: int
+    status: ShipmentStatus
+    description: str | None = Field(default=None)
+
+    shipment_id: UUID = Field(foreign_key="shipment.id")
+    shipment: Shipment = Relationship(
+        back_populates="timeline", sa_relationship_kwargs={"lazy": "selectin"}
+    )
+
 
 class Seller(User, table=True):
     __tablename__ = "seller"
@@ -52,6 +79,9 @@ class Seller(User, table=True):
     created_at: datetime = Field(
         sa_column=Column(postgresql.TIMESTAMP, default=datetime.now)
     )
+
+    address:str | None = Field(default=None)
+    zipcode: int | None = Field(default=None)
 
     shipments: list[Shipment] = Relationship(
         back_populates="seller", sa_relationship_kwargs={"lazy": "selectin"}
@@ -75,12 +105,12 @@ class DeliveryPartner(User, table=True):
     @property
     def active_shipments(self):
         return [
-            shipment 
+            shipment
             for shipment in self.shipments
             if shipment.status != ShipmentStatus.delivered
+            or shipment.status != ShipmentStatus.cancelled
         ]
-    
+
     @property
     def current_handling_capacity(self):
         return self.max_handling_capacity - len(self.active_shipments)
-

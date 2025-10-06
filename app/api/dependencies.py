@@ -4,13 +4,14 @@ from uuid import UUID
 from fastapi import Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.api.core.security import oauth2_scheme_seller, oauth2_scheme_partner
+from app.api.core.security import oauth2_scheme_partner, oauth2_scheme_seller
 from app.database.models import DeliveryPartner, Seller
 from app.database.redis import is_jti_blacklisted
 from app.database.session import create_session
 from app.services.delivery_partner import DeliveryPartnerService
 from app.services.seller import SellerService
 from app.services.shipment import ShipmentService
+from app.services.shipment_event import ShipmentEventService
 from app.utils import decode_access_token
 
 # Async Database session dependency
@@ -74,19 +75,26 @@ async def get_partner(
 
 # Shipment service dep
 def get_shipment_service(session: SessionDep):
-    return ShipmentService(session,DeliveryPartnerService(session))
+    return ShipmentService(
+        session,
+        DeliveryPartnerService(session),
+        ShipmentEventService(session),
+    )
 
 
 # Seller service dep
 def get_seller_service(session: SessionDep):
     return SellerService(session)
 
+
 def get_delivery_partner_service(session: SessionDep):
     return DeliveryPartnerService(session)
 
 
 SellerDep = Annotated[Seller, Depends(get_seller)]
-DeliveryPartnerDep= Annotated[DeliveryPartner, Depends(get_partner)]
-ServiceDep = Annotated[ShipmentService, Depends(get_shipment_service)]
+DeliveryPartnerDep = Annotated[DeliveryPartner, Depends(get_partner)]
+ShipmentServiceDep = Annotated[ShipmentService, Depends(get_shipment_service)]
 SellerServiceDep = Annotated[SellerService, Depends(get_seller_service)]
-DeliveryPartnerServiceDep = Annotated[DeliveryPartnerService, Depends(get_delivery_partner_service)]
+DeliveryPartnerServiceDep = Annotated[
+    DeliveryPartnerService, Depends(get_delivery_partner_service)
+]

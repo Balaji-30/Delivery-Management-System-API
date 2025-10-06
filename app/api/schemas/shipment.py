@@ -2,7 +2,7 @@ from datetime import datetime
 from random import randint
 from uuid import UUID
 from pydantic import BaseModel,Field
-from app.database.models import ShipmentStatus
+from app.database.models import ShipmentEvent, ShipmentStatus
 
 def location():
         return randint(11000,12000)
@@ -16,14 +16,20 @@ class BaseShipment(BaseModel):
 
 class ShipmentRead(BaseShipment):
         id: UUID
-        status: ShipmentStatus
+        timeline: list[ShipmentEvent]
         estimated_delivery: datetime
 
 
 class ShipmentCreate(BaseShipment):
        pass
 
-class ShipmentPatch(BaseModel):
+class ShipmentUpdate(BaseModel):
+        location: int | None = Field(default=None)
         status: ShipmentStatus | None = Field(default=None)
+        description: str | None = Field(default=None)
         estimated_delivery: datetime | None = Field(default=None)
+
+class ShipmentCancel(BaseModel):
+        id: UUID
+        reason: str | None = Field(default=None)
         
