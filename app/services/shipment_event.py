@@ -1,10 +1,12 @@
 from app.database.models import Shipment, ShipmentEvent, ShipmentStatus
 from app.services.base import BaseService
+from app.services.notification import NotificationService
 
 
 class ShipmentEventService(BaseService):
-    def __init__(self, session):
+    def __init__(self, session, tasks):
         super().__init__(ShipmentEvent, session)
+        self.notification_service = NotificationService(tasks)
 
     async def add(
         self,
@@ -26,6 +28,8 @@ class ShipmentEventService(BaseService):
             shipment_id=shipment.id
         )
 
+        await self._notify(shipment,status)
+
         return await self._add(new_event) 
     
     async def get_latest_event(self,shipment:Shipment):
@@ -46,3 +50,49 @@ class ShipmentEventService(BaseService):
                 return "Shipment has been cancelled by the seller"
             case _:
                 return f"Shipment in transit, last scanned at {location}"
+    
+    async def _notify(self, shipment:Shipment, status:ShipmentStatus):
+        
+        if status == ShipmentStatus.in_transit:
+            return
+        
+        subject:str
+        context = {}
+        template_name:str
+
+        match status:
+            case ShipmentStatus.placed:
+                subject="Shipment order received!",
+                context={
+                    "seller": shipment.seller.name,
+                    "partner": shipment.delivery_partner.name,
+                }
+                template_name="mail_placed.html"
+                
+            case ShipmentStatus.out_for_delivery:
+                subject="Your order is out for delivery!",
+                context={
+                    "partner": shipment.delivery_partner.name,
+                }
+                template_name="mail_out_for_delivery.html"
+
+            case ShipmentStatus.delivered:
+                subject="Your order has been delivered!",
+                context={
+                    "partner": shipment.delivery_partner.name,
+                }
+                template_name="mail_delivered.html"
+            
+            case ShipmentStatus.cancelled:
+                subject="Shipment order cancelled",
+                context={
+                    "seller": shipment.seller.name,
+                }
+                template_name="mail_cancelled.html"
+
+        await self.notification_service.send_templated_email(
+            recipients=[shipment.customer_email],
+            subject=subject,
+            context=context,
+            template_name=template_name,
+        )
