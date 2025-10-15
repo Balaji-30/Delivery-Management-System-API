@@ -62,29 +62,30 @@ class ShipmentEventService(BaseService):
 
         match status:
             case ShipmentStatus.placed:
-                subject="Shipment order received!",
+                subject="Shipment order received!"
                 context={
+                    "id": shipment.id,
                     "seller": shipment.seller.name,
                     "partner": shipment.delivery_partner.name,
                 }
                 template_name="mail_placed.html"
                 
             case ShipmentStatus.out_for_delivery:
-                subject="Your order is out for delivery!",
+                subject="Your order is out for delivery!"
                 context={
                     "partner": shipment.delivery_partner.name,
                 }
                 template_name="mail_out_for_delivery.html"
 
             case ShipmentStatus.delivered:
-                subject="Your order has been delivered!",
+                subject="Your order has been delivered!"
                 context={
                     "partner": shipment.delivery_partner.name,
                 }
                 template_name="mail_delivered.html"
             
             case ShipmentStatus.cancelled:
-                subject="Shipment order cancelled",
+                subject="Shipment order cancelled"
                 context={
                     "seller": shipment.seller.name,
                 }

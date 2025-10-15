@@ -1,10 +1,15 @@
 from uuid import UUID
 
-from fastapi import APIRouter, status, HTTPException
+from fastapi import APIRouter, Request, status, HTTPException
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
 
 from app.api.dependencies import DeliveryPartnerDep, SellerDep, ShipmentServiceDep
 from app.api.schemas.shipment import ShipmentCancel, ShipmentCreate, ShipmentUpdate, ShipmentRead
 from app.database.models import Shipment
+from app.utils import TEMPLATE_DIR
+
+templates = Jinja2Templates(TEMPLATE_DIR)
 
 router = APIRouter(prefix="/shipment", tags=["Shipment"])
 
@@ -13,8 +18,7 @@ router = APIRouter(prefix="/shipment", tags=["Shipment"])
 async def get_shipment(
     id: UUID,
     service: ShipmentServiceDep,
-    _: SellerDep,
-):  # pyright: ignore[reportInvalidTypeForm]
+):  
     shipment = await service.get(id)
     if shipment is None:
         raise HTTPException(
@@ -22,6 +26,25 @@ async def get_shipment(
         )
 
     return shipment
+
+@router.get("/track")
+async def track_shipment(
+    request: Request,
+    id:UUID,
+    service: ShipmentServiceDep,
+):
+    shipment= await service.get(id)
+    context= shipment.model_dump() if shipment else {}
+    context["status"]= shipment.status
+    context["partner"]= shipment.delivery_partner.name
+    context["timeline"]= shipment.timeline
+
+    return templates.TemplateResponse(
+        request=request,
+        name="track.html",
+        context=context
+    )
+
 
 
 @router.post("/submit", response_model=ShipmentRead)

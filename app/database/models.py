@@ -54,7 +54,7 @@ class Shipment(SQLModel, table=True):
 
     @property
     def status(self):
-        self.timeline[-1].status if len(self.timeline) > 0 else None
+        return self.timeline[-1].status if len(self.timeline) > 0 else None
 
     
 
