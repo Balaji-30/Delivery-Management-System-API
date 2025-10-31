@@ -2,6 +2,9 @@
     <h2>Order out for delivery!</h2>
     <p>Hello,</p>
     <p>Your order is out for delivery and will be delivered by a {{partner}} agent.</p>
+    {% if verification_code %}
+    <p>Share {{ verification_code }} with delivery executive.</p>
+    {% endif %}
     <p>Thank you for choosing our service!</p>
     <p>Best regards,<br/>Shippin's Delivery Management Team</p>
 </body>

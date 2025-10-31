@@ -1,14 +1,14 @@
+from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Request, status, HTTPException
-from fastapi.responses import HTMLResponse
+from fastapi import APIRouter, Form, Request, status, HTTPException
 from fastapi.templating import Jinja2Templates
 
 from app.api.dependencies import DeliveryPartnerDep, SellerDep, ShipmentServiceDep
 from app.api.schemas.shipment import ShipmentCancel, ShipmentCreate, ShipmentUpdate, ShipmentRead
 from app.database.models import Shipment
 from app.utils import TEMPLATE_DIR
-
+from app.config import app_settings
 templates = Jinja2Templates(TEMPLATE_DIR)
 
 router = APIRouter(prefix="/shipment", tags=["Shipment"])
@@ -38,6 +38,7 @@ async def track_shipment(
     context["status"]= shipment.status
     context["partner"]= shipment.delivery_partner.name
     context["timeline"]= shipment.timeline
+    context["timeline"].reverse()
 
     return templates.TemplateResponse(
         request=request,
@@ -77,3 +78,16 @@ async def shipment_update(
 @router.post("/cancel", response_model=ShipmentRead)
 async def cancel_shipment(cancellation_info: ShipmentCancel, service: ShipmentServiceDep,seller:SellerDep):  # pyright: ignore[reportInvalidTypeForm]
     return await service.cancel(**cancellation_info.model_dump(),seller=seller)
+
+@router.get("/review")
+async def submit_review_page(request:Request,token:str):
+    return templates.TemplateResponse(
+        request=request,
+        name="review.html",
+        context={"review_url": f"http://{app_settings.APP_DOMAIN}/shipment/review?token={token}"},
+    )
+
+@router.post("/review")
+async def submit_review(token:str, rating:Annotated[int,Form(ge=1,le=5)],comment:Annotated[str | None, Form()], service:ShipmentServiceDep):
+    await service.add_review(token,rating=rating,comment=comment)
+    return {"detail":"Review submitted successfully"}

@@ -1,6 +1,6 @@
 
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 
 class BaseSeller(BaseModel):
     name: str
@@ -11,3 +11,5 @@ class SellerRead(BaseSeller):
 
 class SellerCreate(BaseSeller):
     password: str
+    address: str | None =Field(default=None)
+    zipcode: int | None=Field(default=None)

@@ -18,7 +18,10 @@ class DatabaseSettings(BaseSettings):
     
     @property
     def POSTGRES_URL(self):
-        return f"postgresql+asyncpg://{self.POSTGRES_USER}@{self.POSTGRES_SERVER}:{self.POSTGRES_SERVER_PORT}/{self.POSTGRES_DB}" 
+        return f"postgresql+asyncpg://{self.POSTGRES_USER}@{self.POSTGRES_SERVER}:{self.POSTGRES_SERVER_PORT}/{self.POSTGRES_DB}"
+
+    def REDIS_URL(self, db:int):
+        return f"redis://{self.REDIS_HOST}:{self.REDIS_PORT}/{db}" 
 
 class SecuritySettings(BaseSettings):
     JWT_SECRET : str
@@ -38,8 +41,18 @@ class NotificationsSettings(BaseSettings):
     USE_CREDENTIALS: bool = True
     VALIDATE_CERTS: bool = True
 
+    TWILIO_SID: str
+    TWILIO_AUTH_TOKEN: str
+    TWILIO_NUMBER: str
+
     model_config = _base_config
+
+class AppSettings(BaseSettings):
+    APP_NAME: str = "Shippin"
+    APP_VERSION: str = "1.0.0"
+    APP_DOMAIN: str = "0.0.0.0:8000"
 
 database_settings = DatabaseSettings()
 security_settings = SecuritySettings()
 notifications_settings = NotificationsSettings()
+app_settings = AppSettings()

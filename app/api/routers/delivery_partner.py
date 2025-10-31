@@ -25,6 +25,12 @@ async def register_delivery_partner(
 ):
     return await service.add(seller)
 
+@router.get("/verify")
+async def verify_delivery_partner(token:str,service:DeliveryPartnerServiceDep):
+    
+    await service.verify_user_email(token)
+    return {"detail":"Account Verified"}
+
 
 @router.post("/login")
 async def login_delivery_partner(

@@ -13,12 +13,10 @@ class SellerService(UserService):
         super().__init__(Seller, session)
 
     async def add(self, seller_create: SellerCreate) -> Seller:
-
-        return await self._add_user(seller_create.model_dump())
+        return await self._add_user(
+            seller_create.model_dump(),
+            "seller",
+        )
 
     async def login(self, email: str, password: str) -> str:
-        
         return await self._generate_token(email, password)
-
-        
-
