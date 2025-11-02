@@ -1,6 +1,6 @@
-from fastapi import HTTPException, status
 from sqlmodel import Sequence, select, any_
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.api.core.exceptions import DeliveryPartnerNotAvailableError
 from app.api.schemas.delivery_partner import DeliveryPartnerCreate
 from app.database.models import DeliveryPartner, Shipment
 from app.services.user import UserService
@@ -33,10 +33,7 @@ class DeliveryPartnerService(UserService):
                 partner.shipments.append(shipment)
                 return partner
 
-        raise HTTPException(
-            status_code=status.HTTP_406_NOT_ACCEPTABLE,
-            detail="No delivery partner available for the shipment",
-        )
+        raise DeliveryPartnerNotAvailableError()
 
     async def update(self, partner: DeliveryPartner) -> DeliveryPartner:
         return await self._update(partner)

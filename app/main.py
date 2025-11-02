@@ -3,6 +3,7 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from scalar_fastapi import get_scalar_api_reference
 
+from app.api.core.exceptions import add_exception_handlers
 from app.database.session import create_db_tables
 
 from app.api.router import master_router
@@ -17,6 +18,8 @@ async def lifespan_handler(app:FastAPI):
 app=FastAPI(lifespan=lifespan_handler,servers=[{"url": "http://127.0.0.1:8000", "description": "Local Development Server"}])
 
 app.include_router(master_router)
+
+add_exception_handlers(app)
 
 
 @app.get("/scalar",include_in_schema=False)

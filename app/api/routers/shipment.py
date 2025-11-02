@@ -1,12 +1,13 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import APIRouter, Form, Request, status, HTTPException
+from fastapi import APIRouter, Form, Request
 from fastapi.templating import Jinja2Templates
 
-from app.api.dependencies import DeliveryPartnerDep, SellerDep, ShipmentServiceDep
+from app.api.core.exceptions import NothingToUpdateError
+from app.api.dependencies import DeliveryPartnerDep, SellerDep, SessionDep, ShipmentServiceDep
 from app.api.schemas.shipment import ShipmentCancel, ShipmentCreate, ShipmentUpdate, ShipmentRead
-from app.database.models import Shipment
+from app.database.models import Shipment, TagName
 from app.utils import TEMPLATE_DIR
 from app.config import app_settings
 templates = Jinja2Templates(TEMPLATE_DIR)
@@ -19,13 +20,9 @@ async def get_shipment(
     id: UUID,
     service: ShipmentServiceDep,
 ):  
-    shipment = await service.get(id)
-    if shipment is None:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND, detail="ID does not exist"
-        )
+    return await service.get(id)
+    
 
-    return shipment
 
 @router.get("/track")
 async def track_shipment(
@@ -46,8 +43,6 @@ async def track_shipment(
         context=context
     )
 
-
-
 @router.post("/submit", response_model=ShipmentRead)
 async def submit_shipment(
     seller: SellerDep,
@@ -67,11 +62,33 @@ async def shipment_update(
 
     update = shipmentUpdate.model_dump(exclude_none=True)
     if not update:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST, detail="No data provided to update"
-        )
+        raise NothingToUpdateError()
     
     return await service.update(id, shipmentUpdate, partner)
+    
+@router.get("/tag",response_model=ShipmentRead)
+async def add_tag_to_shipment(
+    id:UUID,
+    tag:TagName,
+    service:ShipmentServiceDep
+):
+    return await service.add_tag(id,tag)
+
+@router.delete("/tag", response_model=ShipmentRead)
+async def remove_tag_from_shipment(
+    id:UUID,
+    tag:TagName,
+    service:ShipmentServiceDep
+):
+    return await service.remove_tag(id,tag)
+
+@router.get("/tagged",response_model=list[ShipmentRead])
+async def get_shipments_by_tag(
+    tag_name:TagName,
+    session: SessionDep
+):
+    tag = await tag_name.tag(session)
+    return tag.shipments
     
 
 

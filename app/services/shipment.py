@@ -1,11 +1,11 @@
 from datetime import datetime, timedelta
 from uuid import UUID
 
-from fastapi import HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.core.exceptions import ClientNotAuthorizedError, EntityNotFoundError, InvalidTokenError
 from app.api.schemas.shipment import ShipmentCreate, ShipmentUpdate
-from app.database.models import DeliveryPartner, Review, Seller, Shipment, ShipmentStatus
+from app.database.models import DeliveryPartner, Review, Seller, Shipment, ShipmentStatus, TagName
 from app.database.redis import get_shipment_verification_code
 from app.services.base import BaseService
 from app.services.delivery_partner import DeliveryPartnerService
@@ -25,7 +25,11 @@ class ShipmentService(BaseService):
         self.event_service = event_service
 
     async def get(self, id: UUID) -> Shipment | None:
-        return await self._get(id)
+        shipment = await self._get(id)
+
+        if not shipment:
+            raise EntityNotFoundError()
+        return shipment
 
     async def add(self, shipment_create: ShipmentCreate, seller: Seller) -> Shipment:
         new_shipment = Shipment(
@@ -57,18 +61,12 @@ class ShipmentService(BaseService):
         shipment = await self.get(id)
 
         if shipment.delivery_partner_id != partner.id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="You are not authorized to update this shipment",
-            )
+            raise ClientNotAuthorizedError()
 
         if shipment_update.status == ShipmentStatus.delivered:
             code = await get_shipment_verification_code(shipment.id)
             if int(code) != shipment_update.verification_code:
-                raise HTTPException(
-                    status_code=status.HTTP_401_UNAUTHORIZED,
-                    detail="Client not authorized",
-                )
+                raise ClientNotAuthorizedError()
 
         update_data = shipment_update.model_dump(
             exclude_none=True,
@@ -95,10 +93,7 @@ class ShipmentService(BaseService):
         shipment = await self.get(id)
 
         if shipment.seller_id != seller.id:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="You are not authorized to cancel this shipment",
-            )
+            raise ClientNotAuthorizedError()
 
         event = await self.event_service.add(
             shipment=shipment, status=ShipmentStatus.cancelled, description=reason
@@ -110,15 +105,27 @@ class ShipmentService(BaseService):
     async def delete(self, id: UUID) -> None:
         await self._delete(await self.get(id))
 
+    async def add_tag(self, id:UUID, tag_name:TagName)->None:
+        shipment = await self.get(id)
+        shipment.tags.append(await tag_name.tag(self.session))
+        return await self._update(shipment)
+    
+    async def remove_tag(self, id:UUID, tag_name:TagName)->None:
+        shipment = await self.get(id)
+        try:
+            shipment.tags.remove(await tag_name.tag(self.session))
+        except ValueError:
+            raise EntityNotFoundError
+        return await self._update(shipment)
+
+
+
     async def add_review(self, token: str, rating: int, comment: str) -> None:
 
         token_data = decode_url_safe_token(token)
 
         if not token_data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Invalid or expired token",
-            )
+            raise InvalidTokenError()
         shipment= await self._get(UUID(token_data["id"]))
 
         new_review = Review(

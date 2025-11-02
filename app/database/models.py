@@ -5,7 +5,8 @@ from uuid import UUID, uuid4
 from pydantic import EmailStr
 from sqlalchemy import ARRAY, Column, Integer
 from sqlalchemy.dialects import postgresql
-from sqlmodel import Field, Relationship, SQLModel
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlmodel import Field, Relationship, SQLModel, select
 
 
 class ShipmentStatus(str, Enum):
@@ -15,12 +16,47 @@ class ShipmentStatus(str, Enum):
     delivered = "delivered"
     cancelled = "cancelled"
 
+class TagName(str, Enum):
+    EXPRESS = "express"
+    STANDARD = "standard"
+    FRAGILE = "fragile"
+    HEAVY = "heavy"
+    INTERNATIONAL = "international"
+    DOMESTIC = "domestic"
+    TEMPERATURE_SENSITIVE = "temperature_sensitive"
+    RETURN = "return"
+
+    async def tag(self,session:AsyncSession):
+        return await session.scalar(
+            select(Tag).where(Tag.name==self.value)
+        )
+
+
 
 class User(SQLModel):
     name: str
     email: EmailStr
     email_verified: bool = Field(default=False)
     password_hash: str
+
+class ShipmentTag(SQLModel, table=True):
+    __tablename__ = "shipment_tag"
+
+    shipment_id: UUID = Field(foreign_key="shipment.id", primary_key=True)
+    tag_id: UUID = Field(foreign_key="tag.id", primary_key=True)
+
+class Tag(SQLModel, table=True):
+    __tablename__ = "tag"
+
+    id: UUID = Field(default_factory=uuid4, primary_key=True)
+    name: TagName
+    instruction: str | None = Field(default=None)
+
+    shipments: list["Shipment"] = Relationship(
+        back_populates="tags",
+        link_model=ShipmentTag,
+        sa_relationship_kwargs={"lazy":"immediate"}
+    )
 
 
 class Shipment(SQLModel, table=True):
@@ -54,6 +90,12 @@ class Shipment(SQLModel, table=True):
     )
 
     review: "Review"= Relationship(back_populates="shipment",sa_relationship_kwargs={"lazy":"selectin"})
+
+    tags: list[Tag] = Relationship(
+        back_populates="shipments",
+        link_model=ShipmentTag,
+        sa_relationship_kwargs={"lazy":"immediate"},
+    )
 
     @property
     def status(self):
@@ -148,3 +190,4 @@ class Review(SQLModel, table=True):
         back_populates="review",
         sa_relationship_kwargs={"lazy":"selectin"}
     )
+

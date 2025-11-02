@@ -1,11 +1,11 @@
 from datetime import timedelta
 from uuid import UUID
-from fastapi import HTTPException, status
 from passlib.context import CryptContext
 from pydantic import EmailStr
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.api.core.exceptions import BadCredentialsError, ClientNotVerifiedError, InvalidTokenError
 from app.database.models import User
 from app.services.base import BaseService
 from app.utils import (
@@ -54,9 +54,7 @@ class UserService(BaseService):
         token_data = decode_url_safe_token(token)
 
         if not token_data:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST, detail="Invalid token"
-            )
+            raise InvalidTokenError()
 
         user = await self._get(UUID(token_data["id"]))
         user.email_verified = True
@@ -76,16 +74,10 @@ class UserService(BaseService):
             user is None
             or password_context.verify(password, user.password_hash) is False
         ):
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Seller email/password is incorrect",
-            )
+            raise BadCredentialsError()
 
         if not user.email_verified:
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Email not verified",
-            )
+            raise ClientNotVerifiedError()
 
         return generate_access_token(
             data={"user": {"name": user.name, "id": str(user.id)}}
