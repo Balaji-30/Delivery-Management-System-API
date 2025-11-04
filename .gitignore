@@ -9,3 +9,7 @@ wheels/
 
 # Virtual environments
 .venv
+test.py
+.vscode
+shipments.json
+.python-version

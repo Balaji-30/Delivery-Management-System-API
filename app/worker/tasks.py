@@ -62,3 +62,8 @@ def send_sms(to: str, body: str):
         to=to,
         body=body,
     )
+
+@app.task
+def add_log(message: str)->None:
+    with open("file.log","a") as file:
+        file.write(f"{message}\n")
