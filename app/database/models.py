@@ -3,10 +3,11 @@ from enum import Enum
 from uuid import UUID, uuid4
 
 from pydantic import EmailStr
-from sqlalchemy import ARRAY, Column, Integer
+from sqlalchemy import Column
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlmodel import Field, Relationship, SQLModel, select
+
 
 
 class ShipmentStatus(str, Enum):
@@ -134,6 +135,12 @@ class Seller(User, table=True):
         back_populates="seller", sa_relationship_kwargs={"lazy": "selectin"}
     )
 
+class ServiceableLocation(SQLModel, table=True):
+    __tablename__="servicable_location"
+
+    delivery_partner_id: UUID = Field(foreign_key="delivery_partner.id",primary_key=True)
+    zip_code: int = Field(foreign_key="location.zip_code",primary_key=True)
+
 
 class DeliveryPartner(User, table=True):
     __tablename__ = "delivery_partner"
@@ -148,7 +155,12 @@ class DeliveryPartner(User, table=True):
             default=datetime.now,
         )
     )
-    serviceable_zipcodes: list[int] = Field(sa_column=Column(ARRAY(Integer)))
+    # serviceable_zipcodes: list[int] = Field(sa_column=Column(ARRAY(Integer)))
+    serviceable_locations: list["Location"]= Relationship(
+        back_populates="delivery_partners",
+        link_model=ServiceableLocation,
+        sa_relationship_kwargs={"lazy":"selectin"}
+    )
     max_handling_capacity: int
 
     shipments: list[Shipment] = Relationship(
@@ -168,6 +180,16 @@ class DeliveryPartner(User, table=True):
     def current_handling_capacity(self):
         return self.max_handling_capacity - len(self.active_shipments)
 
+class Location(SQLModel, table=True):
+    __tablename__="location"
+
+    zip_code: int = Field(primary_key=True)
+
+    delivery_partners: list[DeliveryPartner] = Relationship(
+        back_populates="serviceable_locations",
+        link_model=ServiceableLocation,
+        sa_relationship_kwargs={"lazy":"selectin"}
+    )
 
 class Review(SQLModel, table=True):
     __tablename__="reviews"
@@ -190,4 +212,6 @@ class Review(SQLModel, table=True):
         back_populates="review",
         sa_relationship_kwargs={"lazy":"selectin"}
     )
+
+
 

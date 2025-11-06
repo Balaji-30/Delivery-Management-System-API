@@ -1,17 +1,15 @@
 from datetime import datetime
-from random import randint
 from uuid import UUID
 from pydantic import BaseModel, EmailStr,Field
 from app.database.models import ShipmentEvent, ShipmentStatus, TagName
 
-def location():
-        return randint(11000,12000)
+
 
 
 class BaseShipment(BaseModel):
         content: str
         weight: float = Field(le=25,ge=1)
-        destination: int | None = Field(default_factory=location,description="Random Destination if not set")
+        destination: int = Field(description="Pincode of the delivery location", examples=[560001, 110001])
 
 class TagRead(BaseModel):
         name: TagName
@@ -26,6 +24,7 @@ class ShipmentRead(BaseShipment):
 
 
 class ShipmentCreate(BaseShipment):
+       """Details of the new shipment and customer receiving the shipment"""
        customer_email: EmailStr
        customer_phone: str | None = Field(default=None)
 
