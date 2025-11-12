@@ -26,13 +26,13 @@ async def verify_seller(token: str, service: SellerServiceDep):
 
 
 @router.get("/forgot_password")
-async def forgot_password(email: EmailStr, service: SellerServiceDep):
+async def seller_forgot_password(email: EmailStr, service: SellerServiceDep):
     await service.send_password_reset_link(email, router.prefix)
     return {"detail": "Please check your email for the password reset link."}
 
 
 @router.get("/reset_password_form")
-async def get_reset_password_form(request: Request, token: str):
+async def get_seller_reset_password_form(request: Request, token: str):
     templates = Jinja2Templates(TEMPLATE_DIR)
 
     return templates.TemplateResponse(
@@ -45,7 +45,7 @@ async def get_reset_password_form(request: Request, token: str):
 
 
 @router.post("/reset_password")
-async def reset_password(
+async def reset_seller_password(
     request: Request,
     token: str,
     password: Annotated[str,Form()],

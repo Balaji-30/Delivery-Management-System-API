@@ -2,6 +2,7 @@ from contextlib import asynccontextmanager
 from time import perf_counter
 
 from fastapi import FastAPI, Request, Response
+from fastapi.routing import APIRoute
 from scalar_fastapi import get_scalar_api_reference
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -33,6 +34,8 @@ async def lifespan_handler(app: FastAPI):
     yield
     print("server ended")
 
+def custom_generate_unique_id(route: APIRoute) -> str:
+     return route.name
 
 app = FastAPI(
     title="Shippin",
@@ -43,6 +46,7 @@ app = FastAPI(
     servers=[
         {"url": "http://127.0.0.1:8000", "description": "Local Development Server"}
     ],
+    generate_unique_id_function=custom_generate_unique_id,
 )
 
 @app.get("/")
@@ -53,6 +57,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
     allow_methods=["*"],
+    allow_credentials=True,
+    allow_headers=["*"],
 )
 
 app.include_router(master_router)

@@ -179,6 +179,10 @@ class DeliveryPartner(User, table=True):
     @property
     def current_handling_capacity(self):
         return self.max_handling_capacity - len(self.active_shipments)
+    
+    @property
+    def serviceable_zipcodes(self)->list[int]:
+        return [location.zip_code for location in self.serviceable_locations]
 
 class Location(SQLModel, table=True):
     __tablename__="location"
