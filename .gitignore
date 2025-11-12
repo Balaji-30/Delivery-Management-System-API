@@ -16,3 +16,5 @@ shipments.json
 .python-version
 file:memdb1
 file.log
+.vscode
+.DS_Store
