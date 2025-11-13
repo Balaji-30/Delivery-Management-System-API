@@ -49,7 +49,7 @@ app = FastAPI(
     generate_unique_id_function=custom_generate_unique_id,
 )
 
-@app.get("/")
+@app.get("/", include_in_schema=False)
 async def read_root():
         return {"message": "Welcome to Shippin - Delivery Management System API"}
 

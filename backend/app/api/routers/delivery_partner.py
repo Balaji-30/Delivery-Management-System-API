@@ -6,6 +6,7 @@ from fastapi.templating import Jinja2Templates
 from pydantic import EmailStr
 
 from app.api.core.exceptions import NothingToUpdateError
+from app.api.core.security import TokenData
 from app.api.dependencies import (
     DeliveryPartnerDep,
     DeliveryPartnerServiceDep,
@@ -37,13 +38,13 @@ async def verify_delivery_partner(token:str,service:DeliveryPartnerServiceDep):
     return {"detail":"Account Verified"}
 
 
-@router.post("/login")
+@router.post("/login", response_model=TokenData)
 async def login_delivery_partner(
     request_form: Annotated[OAuth2PasswordRequestForm, Depends()],
     service: DeliveryPartnerServiceDep,
 ):
     token = await service.login(request_form.username, request_form.password)
-    return {"access_token": token, "type": "jwt"}
+    return {"access_token": token, "token_type": "jwt"}
 
 
 # Update the delivery partner details
@@ -101,3 +102,8 @@ async def reset_delivery_partner_password(
         request=request,
         name="password/password_reset_successful.html" if is_success else "password/password_reset_unsuccessful.html"
     )
+
+# Get logged in deliver partner profile
+@router.get("/me", response_model=DeliveryPartnerRead)
+async def get_seller_profile(partner: DeliveryPartnerDep):
+    return partner

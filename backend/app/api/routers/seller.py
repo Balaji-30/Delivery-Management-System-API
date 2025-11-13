@@ -5,8 +5,10 @@ from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
 from pydantic import EmailStr
 
-from app.api.dependencies import SellerServiceDep, get_seller_access_token
+from app.api.core.security import TokenData
+from app.api.dependencies import SellerDep, SellerServiceDep, get_seller_access_token
 from app.api.schemas.seller import SellerCreate, SellerRead
+from app.api.schemas.shipment import ShipmentRead
 from app.config import app_settings
 from app.database.redis import add_jti_to_blacklist
 from app.utils import TEMPLATE_DIR
@@ -43,7 +45,6 @@ async def get_seller_reset_password_form(request: Request, token: str):
         },
     )
 
-
 @router.post("/reset_password")
 async def reset_seller_password(
     request: Request,
@@ -61,13 +62,13 @@ async def reset_seller_password(
     )
 
 
-@router.post("/login")
+@router.post("/login", response_model=TokenData)
 async def login_seller(
     request_form: Annotated[OAuth2PasswordRequestForm, Depends()],
     service: SellerServiceDep,
 ):
     token = await service.login(request_form.username, request_form.password)
-    return {"access_token": token, "type": "jwt"}
+    return {"access_token": token, "token_type": "jwt"}
 
 
 # Logout the seller by blacklisting the token
@@ -77,3 +78,15 @@ async def logout_seller(
 ):
     await add_jti_to_blacklist(token_data["jti"])
     return {"detail": "Successfully logged out"}
+
+# Get logged in seller profile
+@router.get("/me", response_model=SellerRead)
+async def get_seller_profile(seller:SellerServiceDep):
+    return seller
+
+@router.get("/shipments", response_model=list[ShipmentRead])
+async def get_seller_shipments(
+    seller: SellerDep,
+):
+    return seller.shipments
+    
