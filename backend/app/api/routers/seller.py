@@ -81,11 +81,11 @@ async def logout_seller(
 
 # Get logged in seller profile
 @router.get("/me", response_model=SellerRead)
-async def get_seller_profile(seller:SellerServiceDep):
+async def get_seller_profile(seller:SellerDep):
     return seller
 
 @router.get("/shipments", response_model=list[ShipmentRead])
-async def get_seller_shipments(
+async def get_shipments(
     seller: SellerDep,
 ):
     return seller.shipments

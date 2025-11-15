@@ -17,6 +17,7 @@ from app.api.schemas.delivery_partner import (
     DeliveryPartnerRead,
     DeliveryPartnerUpdate,
 )
+from app.api.schemas.shipment import ShipmentRead
 from app.database.redis import add_jti_to_blacklist
 from app.utils import TEMPLATE_DIR
 from app.config import app_settings
@@ -105,5 +106,11 @@ async def reset_delivery_partner_password(
 
 # Get logged in deliver partner profile
 @router.get("/me", response_model=DeliveryPartnerRead)
-async def get_seller_profile(partner: DeliveryPartnerDep):
+async def get_partner_profile(partner: DeliveryPartnerDep):
     return partner
+
+@router.get("/shipments", response_model=list[ShipmentRead])
+async def get_shipments(
+    partner: DeliveryPartnerDep,
+):
+    return partner.shipments

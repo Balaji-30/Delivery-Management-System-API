@@ -11,6 +11,9 @@ import {
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "~/components/ui/breadcrumb"
+import { Button } from "~/components/ui/button"
+import { Input } from "~/components/ui/input"
+import { Label } from "~/components/ui/label"
 import Loading from "~/components/ui/loading"
 import { Separator } from "~/components/ui/separator"
 import {
@@ -23,25 +26,25 @@ import api from "~/lib/api"
 import { ShipmentStatus } from "~/lib/client"
 import { getShipmentsCountForStatus } from "~/lib/utils"
 
-export default function DashboardPage() {
+export default function AccountPage() {
 
-  const { token, user }=useContext(AuthContext)
+  const { token, user, logout }=useContext(AuthContext)
   if (!token) {
     return <Navigate to="/"/>
   }
 
   const {isLoading,isError,data}=useQuery({
-    queryKey: ["shipments"],
+    queryKey: ["account"],
     queryFn: async () => {
-      const userApi = user === "seller" ? api.seller : api.partner
-      const { data }= await userApi.getShipments()
+      const getUserProfile = user === "seller" ? api.seller.getSellerProfile : api.partner.getPartnerProfile
+      const { data }= await getUserProfile()
       return data
     }
   })
 
   if(isError){
     return <div className="flex h-screen items-center justify-center">
-        <h1 className="text-2xl font-bold">Error loading shipments</h1>
+        <h1 className="text-2xl font-bold">Error loading account details</h1>
       </div>
   }
 
@@ -53,7 +56,7 @@ export default function DashboardPage() {
         } as React.CSSProperties
       }
     >
-      <AppSidebar currentRoute="Dashboard"/>
+      <AppSidebar currentRoute="Account"/>
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 px-4">
           <SidebarTrigger className="-ml-1" />
@@ -61,27 +64,18 @@ export default function DashboardPage() {
             orientation="vertical"
             className="mr-2 data-[orientation=vertical]:h-4"
           />
-          <h2>Dashboard</h2>
+          <h2>Account</h2>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
           {
             isLoading || !data ? <Loading />:(
-          <>
-          <div className="grid auto-rows-min gap-4 md:grid-cols-4">
-            <NumberLabel value={data.length} label={"Total Shipments"}/>
-            <NumberLabel value={getShipmentsCountForStatus(data, ShipmentStatus.Placed)} label={"Placed"}/>
-            <NumberLabel value={getShipmentsCountForStatus(data, ShipmentStatus.InTransit)} label={"In Transit"}/>
-            <NumberLabel value={getShipmentsCountForStatus(data, ShipmentStatus.Delivered)} label={"Delivered"}/>
-          </div>
-          <div className="grid auto-rows-min gap-4 md:grid-cols-4">
-            {
-              data.map((shipment)=>(
-                <ShipmentCard shipment={shipment}/>
-              ))
-            }
-          </div>
-          
-          </>
+              <div className="flex flex-col gap-4 max-w-[400px]">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" value={data?.name ?? "..."} readOnly />
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" value={data?.email ?? "..."} readOnly />
+                <Button className="w-min ml-auto" onClick={logout}>Log Out</Button>
+              </div>
             )
           }
         </div>
@@ -90,11 +84,3 @@ export default function DashboardPage() {
   )
 }
 
-function NumberLabel({ value, label }: { value: number; label: string }) {
-  return (
-    <div className="flex flex-col gap-2 rounded-xl border border-gray-200 p-4">
-      <h1 className="text-4xl font-bold">{value}</h1>
-      <p className="text-gray-500">{label}</p>
-    </div>
-  )
-}

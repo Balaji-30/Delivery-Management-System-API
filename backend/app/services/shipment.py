@@ -43,7 +43,7 @@ class ShipmentService(BaseService):
 
         event = await self.event_service.add(
             shipment=shipment,
-            location=seller.zipcode,
+            location=seller.zipcode if seller.zipcode else 000000,
             status=ShipmentStatus.placed,
             description=f"Shipment assigned to {partner.name}",
         )

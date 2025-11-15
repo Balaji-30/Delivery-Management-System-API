@@ -15,7 +15,7 @@ _serializer = URLSafeTimedSerializer(security_settings.JWT_SECRET)
 
 def generate_access_token(
     data: dict,
-    expiry: timedelta = timedelta(minutes=10),
+    expiry: timedelta = timedelta(minutes=120),
 ) -> str:
     
     return jwt.encode(

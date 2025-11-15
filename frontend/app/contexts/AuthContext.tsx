@@ -1,3 +1,4 @@
+import { AxiosError } from "axios";
 import { createContext, useEffect, useState } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -25,6 +26,7 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
         const token=localStorage.getItem("token")
         if (token){
             setToken(token)
+            setUser(localStorage.getItem("user") as UserType)
             api.setSecurityData(token)
         }
         else{
@@ -50,7 +52,8 @@ function AuthProvider({ children }: { children: React.ReactNode }) {
             navigate("/dashboard")
         }
         }catch(err){
-            toast.error("Login failed. Please check your credentials.")
+            const error = err as AxiosError
+            toast.error(error.status===403 ? "Account has not been verified yet. Please verify and try again.":"Login failed. Please check your credentials.")
         }
     }
     function logout() {
