@@ -1,15 +1,19 @@
 from random import randint
+
 from app.config import app_settings
 from app.database.models import Shipment, ShipmentEvent, ShipmentStatus
 from app.database.redis import add_shipment_verification_code
 from app.services.base import BaseService
+from app.services.notification import NotificationService
 from app.utils import generate_url_safe_token
-from app.worker.tasks import send_sms, send_templated_email
+# from app.worker.tasks import send_sms, send_templated_email
+
 
 
 class ShipmentEventService(BaseService):
-    def __init__(self, session):
+    def __init__(self, session, tasks):
         super().__init__(ShipmentEvent, session)
+        self.notification=NotificationService(tasks)
         
 
     async def add(
@@ -85,7 +89,7 @@ class ShipmentEventService(BaseService):
                 await add_shipment_verification_code(shipment.id, code)
 
                 if shipment.customer_phone:
-                    send_sms.delay(
+                    self.notification.send_sms(
                         to=shipment.customer_phone,
                         body=f"Your order is arriving soon. Please provide the OTP {code} to the delivery executive to receive your package."
                     )
@@ -108,7 +112,7 @@ class ShipmentEventService(BaseService):
                 }
                 template_name = "mail_cancelled.html"
 
-        send_templated_email.delay(
+        self.notification.send_templated_email(
             recipients=[shipment.customer_email],
             subject=subject,
             context=context,

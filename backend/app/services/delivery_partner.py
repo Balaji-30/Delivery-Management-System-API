@@ -7,8 +7,8 @@ from app.services.user import UserService
 
 
 class DeliveryPartnerService(UserService):
-    def __init__(self, session: AsyncSession):
-        super().__init__(DeliveryPartner, session)
+    def __init__(self, session: AsyncSession, tasks):
+        super().__init__(DeliveryPartner, session, tasks)
 
     async def add(self, delivery_partner: DeliveryPartnerCreate):
         partner: DeliveryPartner = await self._add_user(

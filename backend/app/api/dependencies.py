@@ -1,7 +1,7 @@
 from typing import Annotated
 from uuid import UUID
 
-from fastapi import Depends
+from fastapi import BackgroundTasks, Depends
 
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -66,23 +66,24 @@ async def get_partner(
     return partner
 
 
+
 # Shipment service dep
-def get_shipment_service(session: SessionDep):
+def get_shipment_service(session: SessionDep, tasks: BackgroundTasks):
     return ShipmentService(
         session,
         DeliveryPartnerService(session),
-        ShipmentEventService(session),
+        ShipmentEventService(session,tasks),
 
     )
 
 
 # Seller service dep
-def get_seller_service(session: SessionDep):
-    return SellerService(session)
+def get_seller_service(session: SessionDep, tasks:BackgroundTasks):
+    return SellerService(session,tasks)
 
 
-def get_delivery_partner_service(session: SessionDep):
-    return DeliveryPartnerService(session)
+def get_delivery_partner_service(session: SessionDep, tasks:BackgroundTasks):
+    return DeliveryPartnerService(session,tasks)
 
 
 SellerDep = Annotated[Seller, Depends(get_seller)]

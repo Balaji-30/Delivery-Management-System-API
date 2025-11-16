@@ -24,7 +24,7 @@ class NotificationService:
             notifications_settings.TWILIO_SID, notifications_settings.TWILIO_AUTH_TOKEN
         )
 
-    async def send_email(
+    def send_email(
         self,
         recipients: list[EmailStr],
         subject: str,
@@ -40,7 +40,7 @@ class NotificationService:
             ),
         )
 
-    async def send_templated_email(
+    def send_templated_email(
         self,
         recipients: list[EmailStr],
         subject: str,
@@ -58,9 +58,21 @@ class NotificationService:
             template_name=template_name,
         )
 
-    async def send_sms(self, to: str, body: str):
-        await self.twilio_client.messages.create_async(
+    def send_sms(self, to: str, body: str):
+        
+        self.tasks.add_task(
+            self.twilio_client.messages.create_async, 
             from_=notifications_settings.TWILIO_NUMBER,
             to=to,
             body=body,
+        )
+    
+    def add_log(self, message: str):
+        """
+        Schedules a log message to be printed to the console.
+        Render (or any cloud host) will capture this in its log stream.
+        """
+        self.tasks.add_task(
+            print,                   # 1. The function to run
+            f"[APP_LOG]: {message}"   # 2. The argument for that function
         )

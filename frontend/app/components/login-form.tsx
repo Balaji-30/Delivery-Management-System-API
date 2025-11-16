@@ -10,6 +10,7 @@ import {
 import { Input } from "~/components/ui/input"
 import { AuthContext, type UserType } from "~/contexts/AuthContext"
 import { useContext } from "react"
+import { toast } from "sonner"
 
 export function LoginForm({
   className,
@@ -25,6 +26,7 @@ export function LoginForm({
     if ( !email || !password ) {
       return
     }
+    toast.info("Expect ~2 min delay because of free tier hosting. Thanks for your patience.")
     login(user,email.toString(), password.toString())
   }
   return (

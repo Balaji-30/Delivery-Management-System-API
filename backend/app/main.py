@@ -1,7 +1,7 @@
 from contextlib import asynccontextmanager
 from time import perf_counter
 
-from fastapi import FastAPI, Request, Response
+from fastapi import BackgroundTasks, FastAPI, Request, Response
 from fastapi.routing import APIRoute
 from scalar_fastapi import get_scalar_api_reference
 from fastapi.middleware.cors import CORSMiddleware
@@ -10,7 +10,8 @@ from app.api.core.exceptions import add_exception_handlers
 from app.database.session import create_db_tables
 
 from app.api.router import master_router
-from app.worker.tasks import add_log
+from app.services.notification import NotificationService
+# from app.worker.tasks import add_log
 
 description = """
 Delivery Management System for sellers and delivery agents.
@@ -67,14 +68,20 @@ add_exception_handlers(app)
 
 
 @app.middleware("http")
-async def custom_middleware(request: Request, call_next):
+async def custom_middleware(request: Request,call_next):
     start = perf_counter()
     response: Response = await call_next(request)
     end = perf_counter()
     time_taken = round(end - start, 2)
-    add_log.delay(
-        f"{request.method} {request.url} - {response.status_code} - {time_taken}s"
+    # add_log.delay(
+    #     f"{request.method} {request.url} - {response.status_code} - {time_taken}s"
+    # )
+    tasks = BackgroundTasks()
+    notification = NotificationService(tasks)
+    notification.add_log(
+         f"{request.method} {request.url} - {response.status_code} - {time_taken}s"
     )
+    response.background = tasks
     return response
 
 

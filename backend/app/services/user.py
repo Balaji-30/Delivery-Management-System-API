@@ -1,5 +1,6 @@
 from datetime import timedelta
 from uuid import UUID
+from fastapi import BackgroundTasks
 from passlib.context import CryptContext
 from pydantic import EmailStr
 from sqlalchemy import select
@@ -8,20 +9,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from app.api.core.exceptions import BadCredentialsError, ClientNotVerifiedError, InvalidTokenError
 from app.database.models import User
 from app.services.base import BaseService
+from app.services.notification import NotificationService
 from app.utils import (
     decode_url_safe_token,
     generate_access_token,
     generate_url_safe_token,
 )
 from app.config import app_settings
-from app.worker.tasks import send_templated_email
+# from app.worker.tasks import send_templated_email
 
 password_context = CryptContext(schemes="bcrypt", deprecated="auto")
 
 
 class UserService(BaseService):
-    def __init__(self, model: User, session: AsyncSession):
+    def __init__(self, model: User, session: AsyncSession, tasks:BackgroundTasks):
         super().__init__(model, session)
+        self.notification=NotificationService(tasks)
 
     async def _add_user(self, data: dict, router_prefix: str):
         user = self.model(
@@ -38,7 +41,7 @@ class UserService(BaseService):
             }
         )
 
-        send_templated_email.delay(
+        self.notification.send_templated_email(
             recipients=[user.email],
             subject="Verify your email address",
             context={
@@ -88,7 +91,7 @@ class UserService(BaseService):
 
         token = generate_url_safe_token({"id": str(user.id)}, salt="password-reset")
 
-        send_templated_email.delay(
+        self.notification.send_templated_email(
             recipients=[user.email],
             subject="Shippin Account Password Reset",
             context={
@@ -97,7 +100,7 @@ class UserService(BaseService):
             },
             template_name="mail_password_reset.html",
         )
-        pass
+        
 
 
     async def reset_password(self, token: str, password: str)-> bool:

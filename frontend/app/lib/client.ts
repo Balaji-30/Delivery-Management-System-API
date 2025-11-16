@@ -1105,8 +1105,8 @@ export class Api<
      * No description
      *
      * @tags Delivery Partner
-     * @name GetSellerProfile
-     * @summary Get Seller Profile
+     * @name GetPartnerProfile
+     * @summary Get Partner Profile
      * @request GET:/partner/me
      * @secure
      */

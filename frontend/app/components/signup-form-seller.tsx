@@ -52,7 +52,7 @@ export function SignupForm({
     if (!name || !email || !password1 || !password2 || !zipcode) {
       return
     }
-
+    toast.info("Expect ~2 min delay because of free tier hosting. Thanks for your patience.")
     const seller = {
       name: name,
       email: email,
