@@ -25,7 +25,7 @@ export function SignupForm({
   const sellers = useMutation({
     mutationFn: (data: SellerCreate) => api.seller.registerSeller(data),
     onSuccess: (response) => {
-      toast(`Account verification email sent to (#${response.data.email}). Please verify.`)
+      toast(`Account verification email sent to (#${response.data.email}). Please check spam and verify.`)
       navigate("/seller/login")
     },
     onError: (error) => {

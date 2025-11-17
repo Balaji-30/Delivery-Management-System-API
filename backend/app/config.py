@@ -41,6 +41,8 @@ class NotificationsSettings(BaseSettings):
     USE_CREDENTIALS: bool = True
     VALIDATE_CERTS: bool = True
 
+    RESEND_API_KEY: str
+
     TWILIO_SID: str
     TWILIO_AUTH_TOKEN: str
     TWILIO_NUMBER: str

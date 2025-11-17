@@ -29,7 +29,7 @@ export function ForgotPasswordForm({
     toast.info("Expect ~2 min delay because of free tier hosting. Thanks for your patience.")
     const userApi = user==="seller" ? api.seller.sellerForgotPassword : api.partner.deliveryPartnerForgotPassword 
     await userApi({email})
-    toast.success("If an account with that email exists, a reset link has been sent.")
+    toast.success("If an account with that email exists, a reset link has been sent. Please check spam.")
   }
   return (
     <form className={cn("flex flex-col gap-6", className)} {...props} action={sendResetLink}>

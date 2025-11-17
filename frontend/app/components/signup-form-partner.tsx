@@ -25,7 +25,7 @@ export function SignupForm({
   const partners = useMutation({
     mutationFn: (data: DeliveryPartnerCreate) => api.partner.registerDeliveryPartner(data),
     onSuccess: (response) => {
-      toast(`Account verification email sent to (#${response.data.email}). Please verify.`)
+      toast(`Account verification email sent to (#${response.data.email}). Please check spam and verify.`)
       navigate("/partner/login")
     },
     onError: (error) => {
