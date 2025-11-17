@@ -85,7 +85,7 @@ async def get_seller_profile(seller:SellerDep):
     return seller
 
 @router.get("/shipments", response_model=list[ShipmentRead])
-async def get_shipments(
+async def get_seller_shipments(
     seller: SellerDep,
 ):
     return seller.shipments

@@ -1,7 +1,9 @@
 import { Api } from "./client";
 
+const baseUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:8000";
+
 const api = new Api({
-    baseURL: "http://127.0.0.1:8000",
+    baseURL: baseUrl,
     securityWorker: (token)=>{
         if (token) {
             return {

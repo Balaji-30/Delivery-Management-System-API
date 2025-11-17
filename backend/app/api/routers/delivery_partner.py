@@ -110,7 +110,7 @@ async def get_partner_profile(partner: DeliveryPartnerDep):
     return partner
 
 @router.get("/shipments", response_model=list[ShipmentRead])
-async def get_shipments(
+async def get_partner_shipments(
     partner: DeliveryPartnerDep,
 ):
     return partner.shipments
