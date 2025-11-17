@@ -52,7 +52,8 @@ class NotificationsSettings(BaseSettings):
 class AppSettings(BaseSettings):
     APP_NAME: str = "Shippin"
     APP_VERSION: str = "1.0.0"
-    APP_DOMAIN: str = "0.0.0.0:8000"
+    APP_DOMAIN: str = "localhost:5173"
+    BACKEND_APP_DOMAIN: str="localhost:8000"
 
 database_settings = DatabaseSettings()
 security_settings = SecuritySettings()

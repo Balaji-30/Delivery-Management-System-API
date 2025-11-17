@@ -1,10 +1,12 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Form, Request
+from fastapi.responses import RedirectResponse
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.templating import Jinja2Templates
 from pydantic import EmailStr
 
+from app.api.core.exceptions import InvalidTokenError
 from app.api.core.security import TokenData
 from app.api.dependencies import SellerDep, SellerServiceDep, get_seller_access_token
 from app.api.schemas.seller import SellerCreate, SellerRead
@@ -23,8 +25,11 @@ async def register_seller(seller: SellerCreate, service: SellerServiceDep):
 
 @router.get("/verify")
 async def verify_seller(token: str, service: SellerServiceDep):
-    await service.verify_user_email(token)
-    return {"detail": "Account Verified"}
+    try:
+        await service.verify_user_email(token)
+        return RedirectResponse(url=f"https://{app_settings.APP_DOMAIN}/seller/login?verified=true")
+    except (InvalidTokenError,Exception):
+        return RedirectResponse(url=f"https://{app_settings.APP_DOMAIN}/seller/login?verified=false")
 
 
 @router.get("/forgot_password")

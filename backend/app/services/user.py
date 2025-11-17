@@ -46,7 +46,7 @@ class UserService(BaseService):
             subject="Verify your email address",
             context={
                 "name": user.name,
-                "verification_url": f"http://{app_settings.APP_DOMAIN}/{router_prefix}/verify?token={token}",
+                "verification_url": f"http://{app_settings.BACKEND_APP_DOMAIN}/{router_prefix}/verify?token={token}",
             },
             template_name="mail_verification.html",
         )

@@ -1,8 +1,40 @@
 import { Package } from "lucide-react"
+import { useEffect } from "react";
+import { useNavigate, useSearchParams } from "react-router";
+import { toast } from "sonner";
 
 import { LoginForm } from "~/components/login-form"
 
 export default function SellerLoginPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check for SUCCESS
+    if (searchParams.get("verified") === "true") {
+      toast.success("Email verified successfully! Please login.");
+      
+      // Clean the URL so the user doesn't see the ugly param
+      cleanUrl();
+    }
+
+    // Check for ERROR
+    if (searchParams.get("verified") === "false") {
+      toast.error("Verification link expired or invalid. Please try registering again.");
+      cleanUrl();
+      navigate("/seller/login")
+    } 
+  }, [searchParams]);
+
+  // Helper to remove params without refreshing the page
+  const cleanUrl = () => {
+    setSearchParams((params) => {
+      params.delete("verified");
+      params.delete("error");
+      return params;
+    });
+  };
+
   return (
     <div className="grid min-h-svh lg:grid-cols-2">
       <div className="flex flex-col gap-4 p-6 md:p-10">
