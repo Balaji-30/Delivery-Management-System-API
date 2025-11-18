@@ -20,6 +20,9 @@ This project is fully deployed and live on the web:
 - **Backend API (Render):** [**https://shippin-backend-qzwz.onrender.com**](https://shippin-backend-qzwz.onrender.com)
 - **API Documentation (Swagger):** [**https://shippin-backend-qzwz.onrender.com/docs**](https://shippin-backend-qzwz.onrender.com/docs)
 
+> **Note on Performance (Cold Starts)**
+> This project is hosted on Render's free tier. The backend service will "spin down" after 15 minutes of inactivity. As a result, the **first request may take up to 2 minutes** while the server restarts. Subsequent requests will be fast.
+
 ---
 
 ## 🎯 Problem Statement
