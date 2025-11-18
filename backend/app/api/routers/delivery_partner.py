@@ -87,7 +87,7 @@ async def get_delivery_partner_reset_password_form(request: Request, token: str)
         request=request,
         name="password_reset_form.html",
         context={
-            "reset_url": f"http://{app_settings.APP_DOMAIN}{router.prefix}/reset_password?token={token}"
+            "reset_url": f"http://{app_settings.BACKEND_APP_DOMAIN}{router.prefix}/reset_password?token={token}"
         },
     )
 

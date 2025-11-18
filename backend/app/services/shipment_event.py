@@ -74,6 +74,7 @@ class ShipmentEventService(BaseService):
                     "id": shipment.id,
                     "seller": shipment.seller.name,
                     "partner": shipment.delivery_partner.name,
+                    "domain":app_settings.BACKEND_APP_DOMAIN
                 }
                 template_name = "mail_placed.html"
 
@@ -101,7 +102,7 @@ class ShipmentEventService(BaseService):
                 token = generate_url_safe_token({"id":str(shipment.id)})
                 context = {
                     "partner": shipment.delivery_partner.name,
-                    "review_url":f"http://{app_settings.APP_DOMAIN}/shipment/review?token={token}"
+                    "review_url":f"http://{app_settings.BACKEND_APP_DOMAIN}/shipment/review?token={token}"
                 }
                 template_name = "mail_delivered.html"
 

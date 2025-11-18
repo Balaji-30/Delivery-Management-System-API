@@ -9,7 +9,7 @@ from app.database.models import DeliveryPartner, Review, Seller, Shipment, Shipm
 from app.database.redis import get_shipment_verification_code
 from app.services.base import BaseService
 from app.services.delivery_partner import DeliveryPartnerService
-from app.services.notification import NotificationService
+# from app.services.notification import NotificationService
 from app.services.shipment_event import ShipmentEventService
 from app.utils import decode_url_safe_token
 
@@ -18,14 +18,13 @@ class ShipmentService(BaseService):
     def __init__(
         self,
         session: AsyncSession,
-        notification: NotificationService,
         partner_service: DeliveryPartnerService,
         event_service: ShipmentEventService,
     ):
         super().__init__(Shipment, session)
         self.partner_service = partner_service
         self.event_service = event_service
-        self.notification=notification
+        # self.notification=notification
 
     async def get(self, id: UUID) -> Shipment | None:
         shipment = await self._get(id)
